@@ -3,7 +3,7 @@ from collections import namedtuple
 
 import typing
 
-Track = namedtuple("Track", ["title", "start_timestamp"])
+Track = namedtuple("Track", ["title", "artist", "start_timestamp"])
 
 
 def parse_time_string(time: str):
@@ -26,17 +26,17 @@ def parse_tracks(tracks_content: str, duration: bool = False) -> typing.List[Tra
         line = line.strip()
         if line.startswith("#") or len(line) == 0:
             continue
-        track_time, title = parse_line(line)
+        track_time, title, artist = parse_line(line)
         track_time_seconds = parse_time_string(track_time)
         if not duration:
             current_time = track_time_seconds
-        tracks.append(Track(title=title, start_timestamp=current_time))
+        tracks.append(Track(title=title, start_timestamp=current_time, artist=artist))
         if duration:
             current_time += track_time_seconds
     return tracks
 
 
-def parse_line(line: str) -> typing.Tuple[str, str]:
+def parse_line(line: str) -> typing.Tuple[str, str, str]:
     line = line.strip()
     # match [HHH:]MM:SS
     timestamp_regex = r"(?:\d+:)?(?:0[0-9]|[1-5][0-9]):(?:0[0-9]|[1-5][0-9])"
@@ -55,4 +55,16 @@ def parse_line(line: str) -> typing.Tuple[str, str]:
             f"Can't find a valid timestamp (HH:MM:SS or MM:SS) at the beginning or at the end of line: {line}"
         )
     title = title.strip(" -|")
-    return timestamp, title
+    title, artist = parse_title(title)
+    return timestamp, artist, title
+
+# If the title is splitted by a specific delimiter (for test it is hyphen ), set this as the author
+# TODO: write a more comprehensive file parser with an CLI argument to pass the line format
+def parse_title(line: str) -> typing.Tuple[str, str]:
+    line = line.strip()
+    if "-" not in line:
+        return line, ""
+
+    title, artist = line.split("-", 1)
+
+    return title.strip(), artist.strip()

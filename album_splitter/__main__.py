@@ -192,6 +192,9 @@ def main():
     for index, file in enumerate(output_files):
         track = tracks[index]
         tag_data.update({"title": str(track.title), "tracknumber": index + 1})
+        if len(str(track.artist)) > 0: 
+            tag_data.update({"artist": str(track.artist)})
+
         tag_file(file, tag_data)
     print(f"Done! You can find your tracks in {outfolder}")
 
